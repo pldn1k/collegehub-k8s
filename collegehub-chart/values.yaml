@@ -1,0 +1,78 @@
+namespace: collegehub
+
+secrets:
+  jwtSecret: c3VwZXItc2VjcmV0LWp3dC1rZXktMjAyNA==
+  postgresPassword: cG9zdGdyZXMxMjM=
+
+postgres:
+  port: 5432
+  database: collegehub
+  user: postgres
+  storage:
+    size: 5Gi
+  image:
+    repository: postgres
+    tag: "16-alpine"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+redis:
+  port: 6379
+  image:
+    repository: redis
+    tag: "7-alpine"
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+
+authService:
+  port: 8001
+  replicas: 2
+  image:
+    repository: auth-service
+    tag: latest
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+
+apiGateway:
+  port: 8000
+  replicas: 2
+  nodePort: 30081
+  image:
+    repository: api-gateway
+    tag: latest
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+
+frontend:
+  nodePort: 30080
+  replicas: 1
+  image:
+    repository: frontend
+    tag: latest
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "50m"
+    limits:
+      memory: "128Mi"
+      cpu: "100m"

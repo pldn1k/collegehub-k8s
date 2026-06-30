@@ -1,0 +1,48 @@
+CREATE TABLE users ( 
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    role VARCHAR(20) NOT NULL
+);
+
+CREATE TABLE subjects (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE grades (
+    id SERIAL PRIMARY KEY,
+    student_id INTEGER REFERENCES users(id),
+    subject_id INTEGER REFERENCES subjects(id),
+    grade INTEGER NOT NULL,
+    date DATE NOT NULL
+);
+
+CREATE TABLE schedule (
+    id SERIAL PRIMARY KEY,
+    day VARCHAR(20) NOT NULL,
+    time TIME NOT NULL,
+    subject_id INTEGER REFERENCES subjects(id),
+    room INTEGER NOT NULL
+);
+
+INSERT INTO users (username, password, name, role) VALUES
+    ('student1', 'pass123', 'Паша Техник', 'student'),
+    ('teacher1', 'pass123', 'Олег Сухофруктов', 'teacher'),
+    ('admin' ,'pass123', 'Валерий Пуссиитер', 'admin');
+    
+INSERT INTO subjects (name) VALUES
+    ('Математика'),
+    ('Физика'), 
+    ('Программирование'), 
+    ('Английский');
+INSERT INTO grades (student_id, subject_id, grade, date) VALUES
+    (1, 1, 5, '2026-01-15'),
+    (1, 2, 4, '2026-01-20'),
+    (1, 3, 5, '2026-01-25');
+INSERT INTO schedule (day, time, subject_id, room) VALUES
+    ('Понедельник', '10:00', 1, 101),
+    ('Понедельник', '12:00', 2, 203),
+    ('Вторник', '10:00', 3, 305),
+    ('Вторник', '14:00', 4, 107);

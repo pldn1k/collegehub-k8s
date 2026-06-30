@@ -1,0 +1,25 @@
+# Python
+_pycache_/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.log
+
+# Docker
+*.tar
+*.tar.gz
+
+# Kubernetes
+*.kubeconfig
+*.swp
+
+# IDE
+.vscode/
+.idea/
+
+# Secrets
+*secret*.yaml
+*.pem
+*.key
+.env

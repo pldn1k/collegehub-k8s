@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CollegeHub - Образовательный портал</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #5a67d8;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .login-form {
+            max-width: 400px;
+            margin: 50px auto;
+        }
+        
+        .login-form input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .grade {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            border-radius: 50%;
+            font-weight: bold;
+            margin: 5px;
+        }
+        
+        .grade-5 { background: #4caf50; color: white; }
+        .grade-4 { background: #2196f3; color: white; }
+        .grade-3 { background: #ff9800; color: white; }
+        .grade-2 { background: #f44336; color: white; }
+        
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .schedule-table th,
+        .schedule-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .schedule-table th {
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .news-item {
+            padding: 10px;
+            border-left: 3px solid #667eea;
+            margin-bottom: 10px;
+            background: #f9f9f9;
+        }
+        
+        .news-title {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .news-date {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="nav">
+                <div class="logo">🏫 CollegeHub</div>
+                <div id="authButtons" class="user-info">
+                    <span id="userName" style="display: none;"></span>
+                    <button id="loginBtn" onclick="showLoginForm()">Войти</button>
+                    <button id="logoutBtn" onclick="logout()" style="display: none;">Выйти</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Контент -->
+        <div id="content">
+            <div class="card">
+                <h2>📚 Добро пожаловать в CollegeHub!</h2>
+                <p>Войдите в систему, чтобы увидеть расписание, оценки и новости.</p>
+            </div>
+        </div>
+        
+        <!-- Форма входа -->
+        <div id="loginModal" class="card login-form" style="display: none;">
+            <h2>🔐 Вход в систему</h2>
+            <input type="text" id="username" placeholder="Логин (student1 / teacher1 / admin)" autocomplete="off">
+            <input type="password" id="password" placeholder="Пароль (pass123)">
+            <button onclick="login()">Войти</button>
+            <button onclick="hideLoginForm()">Отмена</button>
+            <div id="loginError" class="error" style="display: none;"></div>
+            <div style="margin-top: 15px; font-size: 12px; color: #999;">
+                <strong>Тестовые аккаунты:</strong><br>
+                student1 / pass123 (студент)<br>
+                teacher1 / pass123 (преподаватель)<br>
+                admin / pass123 (админ)
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let apiBase = "http://localhost:30081/api";
+        
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            errorDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch(`${apiBase}/auth/login`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password})
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    currentUser = data.user;
+                    hideLoginForm();
+                    loadContent();
+                } else {
+                    errorDiv.textContent = data.message || 'Ошибка входа';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (err) {
+                errorDiv.textContent = 'Ошибка соединения';
+                errorDiv.style.display = 'block';
+            }
+        }
+        
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            currentUser = null;
+            loadContent();
+        }
+        
+        function showLoginForm() {
+            document.getElementById('loginModal').style.display = 'block';
+        }
+        
+        function hideLoginForm() {
+            document.getElementById('loginModal').style.display = 'none';
+        }
+        
+        async function loadContent() {
+            const token = localStorage.getItem('token');
+            const userJson = localStorage.getItem('user');
+            currentUser = userJson ? JSON.parse(userJson) : null;
+            
+            // Обновляем UI
+            const loginBtn = document.getElementById('loginBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const userNameSpan = document.getElementById('userName');
+            
+            if (currentUser) {
+                loginBtn.style.display = 'none';
+                logoutBtn.style.display = 'inline-block';
+                userNameSpan.style.display = 'inline';
+                userNameSpan.textContent = `👤 ${currentUser.name} (${currentUser.role === 'student' ? 'Студент' : currentUser.role === 'teacher' ? 'Преподаватель' : 'Админ'})`;
+            } else {
+                loginBtn.style.display = 'inline-block';
+                logoutBtn.style.display = 'none';
+                userNameSpan.style.display = 'none';
+            }
+            
+            // Загружаем контент
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = '<div class="loading">Загрузка...</div>';
+            
+            try {
+                // Загружаем новости (публичные)
+                const newsResponse = await fetch(`${apiBase}/news`);
+                const newsData = await newsResponse.json();
+                
+                let html = `
+                    <div class="card">
+                        <h2>📢 Новости колледжа</h2>
+                        ${newsData.news.map(news => `
+                            <div class="news-item">
+                                <div class="news-title">${news.title}</div>
+                                <div class="news-date">${news.date}</div>
+                                <div>${news.content}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                if (currentUser) {
+                    // Загружаем оценки
+                    const gradesResponse = await fetch(`${apiBase}/grades`, {
+                        headers: {'Authorization': `Bearer ${token}`}
+                    });
+                    const gradesData = await gradesResponse.json();
+                    
+                    html += `
+                        <div class="card">
+                            <h2>📊 Мои оценки</h2>
+                            <div style="display: flex; flex-wrap: wrap;">
+                    `;
+                    
+                    if (gradesData.grades) {
+                        if (currentUser.role === 'student') {
+                            gradesData.grades.forEach(grade => {
+                                html += `<div class="grade grade-${grade.grade}">${grade.grade}</div>`;
+                            });
+                        } else {
+                            html += '<table class="schedule-table"><tr><th>Студент</th><th>Предмет</th><th>Оценка</th></tr>';
+                            gradesData.grades.forEach(grade => {
+                                html += `<tr><td>${grade.student}</td><td>${grade.subject}</td><td>${grade.grade}</td></tr>`;
+                            });
+                            html += '</table>';
+                        }
+                    }
+                    html += `</div></div>`;
+                    
+                    // Загружаем расписание
+                    const scheduleResponse = await fetch(`${apiBase}/schedule`, {
+                        headers: {'Authorization': `Bearer ${token}`}
+                    });
+                    const scheduleData = await scheduleResponse.json();
+                    
+                    html += `
+                        <div class="card">
+                            <h2>📅 Расписание занятий</h2>
+                            <table class="schedule-table">
+                                <tr><th>День</th><th>Время</th><th>Предмет</th><th>Аудитория</th></tr>
+                                ${scheduleData.schedule.map(item => `
+                                    <tr>
+                                        <td>${item.day}</td>
+                                        <td>${item.time}</td>
+                                        <td>${item.subject}</td>
+                                        <td>${item.room}</td>
+                                    </tr>
+                                `).join('')}
+                            </table>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="card">
+                            <h2>🔐 Войдите в систему</h2>
+                            <p>Войдите, чтобы увидеть ваши оценки, расписание и персональную информацию.</p>
+                        </div>
+                    `;
+                }
+                
+                contentDiv.innerHTML = html;
+            } catch (err) {
+                contentDiv.innerHTML = `<div class="error">Ошибка загрузки: ${err.message}</div>`;
+            }
+        }
+        
+        // Загружаем контент при старте
+        loadContent();
+    </script>
+</body>
+</html>
